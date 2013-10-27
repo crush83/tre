@@ -34,8 +34,9 @@ public class TreeArchive {
 	
 	private final Map<String, TreeRecord> records = new ConcurrentHashMap<String, TreeRecord>();
 	
-	public void processLiveFile(final String filePath, final String liveFile) throws IOException {
-		InputStream inputStream = new FileInputStream(filePath + liveFile);
+	public void processLiveFile(final String filePath) throws IOException {
+		final InputStream inputStream = new FileInputStream(filePath);
+		final String path = filePath.substring(0, filePath.lastIndexOf(File.separator) + 1);
 
 		try {
 			Ini ini = new Ini(inputStream);
@@ -48,12 +49,12 @@ public class TreeArchive {
 				files = section.getAll("searchTree_00_" + i, String[].class);
 				
 				for (int k = 0; k < files.length; ++k)
-					processTreeFile(filePath + files[k]);
+					processTreeFile(path + files[k]);
 	
 				files = section.getAll("searchTree_01_" + i, String[].class); //Get sku1 files at the 01 position.
 	
 				for (int k = 0; k < files.length; ++k)
-					processTreeFile(filePath + files[k]);
+					processTreeFile(path + files[k]);
 			}
 		} catch (InvalidFileFormatException e) {
 			logger.error(e.getMessage());
@@ -123,10 +124,22 @@ public class TreeArchive {
 		}
 	}
 	
-	public static final void main(String[] args) throws Exception {
-		TreeArchive archive = new TreeArchive();
-		archive.processLiveFile("e:\\games\\swgemu\\", "swgemu_live.cfg");
+	public static final void main(String[] args) throws Exception {	
+		if (args.length < 2) {
+			System.out.println("Usage: export.jar <source> <destination>");
+			System.out.println(" source       The path to the swg_live.cfg file.");
+			System.out.println(" destination  The directory path to which you want to export the files.");
+			return;
+		}
 		
-		archive.export("e:\\test\\", "");
+		String sourcePath = args[0];
+		String targetPath = args[1];
+		
+		System.out.println(sourcePath);
+		System.out.println(targetPath);
+		
+		TreeArchive archive = new TreeArchive();
+		archive.processLiveFile(sourcePath);
+		archive.export(targetPath, "");
 	}
 }
